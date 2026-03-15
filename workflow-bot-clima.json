@@ -21,20 +21,11 @@
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "e4f5a6b7-c8d9-4e0f-a1b2-c3d4e5f6a7b8",
-              "name": "cidade",
-              "value": "={{ $json.message.text.toLowerCase().trim().normalize(\"NFD\").replace(/[\\u0300-\\u036f]/g, \"\") }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
+        "mode": "runOnceForEachItem",
+        "jsCode": "const text = $json.message.text;\nlet n = text.toLowerCase().trim().normalize(\"NFD\").replace(/[\\u0300-\\u036f]/g, \"\");\n\nn = n.replace(/^(oi|ola|hey|hello|hi|e ai|eai|opa|bom dia|boa tarde|boa noite)[,!.\\s]*/i, '').trim();\n\nconst patterns = [\n  /^(?:qual|como)\\s+(?:e|eh|esta|ta)?\\s*o?\\s*(?:clima|tempo)\\s+(?:(?:hoje|hj|agora|amanha|a\\s+amanha)\\s+)*(?:em|de|na|no|para|pra)\\s+(.+)/i,\n  /^(?:me\\s+)?(?:diz|fala|conta|mostra|informa)\\s+(?:o\\s+|a\\s+)?(?:clima|tempo|temperatura)\\s+(?:de|em|na|no|para|pra)\\s+(.+)/i,\n  /^(?:clima|tempo|temperatura)\\s+(?:de|em|na|no)\\s+(.+)/i,\n  /^(?:previsao)\\s+(?:do\\s+tempo\\s+)?(?:de|em|na|no|para|pra)\\s+(.+)/i,\n  /^(?:quero\\s+saber)\\s+(?:o\\s+|a\\s+)?(?:clima|tempo|temperatura)\\s+(?:de|em|na|no)\\s+(.+)/i,\n  /^(?:ta|esta)\\s+(?:chovendo|frio|calor|quente|nublado)\\s+(?:em|na|no)\\s+(.+)/i\n];\n\nlet city = null;\nfor (const p of patterns) {\n  const m = n.match(p);\n  if (m) { city = m[1]; break; }\n}\n\nif (city) {\n  city = city.replace(/\\b(capital|hoje|hj|agora|amanha|por favor)\\b/g, '').replace(/[?!.,;]+/g, '').replace(/\\s+/g, ' ').trim();\n}\n\nif (!city || city.length < 2) {\n  city = n.replace(/[?!.,;]+/g, '').replace(/\\s+/g, ' ').trim();\n}\n\nconst abbr = { 'sp': 'Sao Paulo', 'rj': 'Rio de Janeiro', 'bh': 'Belo Horizonte', 'poa': 'Porto Alegre', 'bsb': 'Brasilia', 'ctba': 'Curitiba', 'cwb': 'Curitiba', 'fln': 'Florianopolis', 'ssa': 'Salvador', 'rec': 'Recife', 'for': 'Fortaleza', 'gyn': 'Goiania', 'man': 'Manaus', 'nat': 'Natal' };\nif (abbr[city]) { city = abbr[city]; }\n\nreturn { cidade: city };"
       },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [240, 0],
       "id": "b7c8d9e0-f1a2-4b3c-d4e5-f6a7b8c9d0e1",
       "name": "Normalizar Cidade"
@@ -65,7 +56,7 @@
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
+      "typeVersion": 4.1,
       "position": [480, 0],
       "id": "c9d0e1f2-a3b4-4c5d-e6f7-a8b9c0d1e2f3",
       "name": "Consulta Clima Atual",
@@ -136,7 +127,7 @@
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
+      "typeVersion": 4.1,
       "position": [1000, -80],
       "id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
       "name": "Consulta Previsão 3 Dias",
@@ -202,7 +193,8 @@
         "chatId": "={{ $node[\"Telegram Trigger\"].json.message.chat.id }}",
         "text": "={{ $json.output || $json.fallback_message }}",
         "additionalFields": {
-          "parse_mode": "Markdown"
+          "parse_mode": "Markdown",
+          "appendAttribution": false
         }
       },
       "type": "n8n-nodes-base.telegram",
@@ -221,7 +213,9 @@
       "parameters": {
         "chatId": "={{ $node[\"Telegram Trigger\"].json.message.chat.id }}",
         "text": "❌ Cidade não encontrada.\n\nDigite o nome de uma cidade brasileira.\nExemplos: São Paulo, Belo Horizonte, Manaus",
-        "additionalFields": {}
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,

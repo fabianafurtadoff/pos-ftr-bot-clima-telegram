@@ -2,6 +2,17 @@
 
 Chatbot para Telegram desenvolvido com **N8N** que informa a **temperatura atual** e a **previsão dos próximos 3 dias** para qualquer cidade do Brasil, utilizando a API do **OpenWeatherMap** e o **Google Gemini** para gerar respostas naturais e informativas.
 
+## Testar o Bot
+
+Acesse o bot diretamente no Telegram e envie o nome de uma cidade:
+
+**[@climatelegram_bot](https://t.me/climatelegram_bot)**
+
+Exemplos de mensagens:
+- `São Paulo`
+- `bh`
+- `oi, como ta o clima em Curitiba`
+
 ## Arquitetura
 
 ```mermaid
@@ -23,7 +34,7 @@ flowchart LR
 | Etapa | Nó N8N | Descrição |
 |-------|--------|-----------|
 | 1 | Telegram Trigger | Recebe mensagem do usuário |
-| 2 | Normalizar Cidade | Remove acentos, espaços e converte para minúsculas |
+| 2 | Normalizar Cidade | Extrai nome da cidade de frases em linguagem natural, resolve abreviações (SP, BH, RJ) |
 | 3 | Consulta Clima Atual | Chama OpenWeatherMap (`/weather`) com filtro Brasil |
 | 4 | Cidade Encontrada? | Verifica se a API retornou dados válidos |
 | 5 | Consulta Previsão 3 Dias | Chama OpenWeatherMap (`/forecast`) usando coordenadas |
@@ -38,7 +49,8 @@ flowchart LR
 - **Previsão de 3 dias** com temperaturas mínima e máxima
 - **Respostas com IA** (Google Gemini) — mensagens naturais com emojis e dicas práticas
 - **Fallback determinístico** — garante resposta mesmo se a IA estiver indisponível
-- **Normalização de entrada** — trata acentos, espaços e capitalização
+- **Processamento de linguagem natural** — entende frases como "oi, como tá o clima em BH?"
+- **Abreviações de cidades** — reconhece SP, RJ, BH, BSB e outras siglas
 - **Filtro Brasil** — busca restrita a cidades brasileiras (`q=cidade,BR`)
 - **Formatação Markdown** — respostas com destaque visual no Telegram
 
