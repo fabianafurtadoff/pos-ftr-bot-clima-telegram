@@ -132,7 +132,7 @@ Abra a conversa com o bot no Telegram e envie o nome de qualquer cidade brasilei
 ## Estrutura do Repositório
 
 ```
-bot-clima-telegram/
+pos-ftr-bot-clima-telegram/
 ├── README.md                    # Documentação do projeto
 └── workflow-bot-clima.json      # Workflow N8N (importável)
 ```
