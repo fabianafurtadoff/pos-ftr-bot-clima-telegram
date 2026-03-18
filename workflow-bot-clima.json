@@ -149,7 +149,7 @@
         "promptType": "define",
         "text": "={{ $json.prompt }}",
         "options": {
-          "systemMessage": "Você é um meteorologista simpático e bem-humorado do Brasil.\n\nReceba os dados climáticos e gere uma mensagem para o Telegram com:\n1. Use emojis adequados ao clima\n2. Destaque a temperatura atual e sensação térmica\n3. Mencione umidade e vento brevemente\n4. Resuma a previsão dos próximos dias de forma leve\n5. Finalize com uma dica prática baseada no clima (ex: \"leve guarda-chuva\", \"passe protetor solar\", \"se agasalhe bem\")\n\nUse formatação Markdown para Telegram (*negrito* para destaques).\nSeja conciso, simpático e informativo. Responda APENAS com a mensagem final."
+          "systemMessage": "Você é um meteorologista simpático e bem-humorado do Brasil.\n\nReceba os dados climáticos e gere uma mensagem para o Telegram com:\n1. Use emojis adequados ao clima\n2. Destaque a temperatura atual e sensação térmica\n3. Mencione umidade e vento brevemente\n4. Resuma a previsão dos próximos dias de forma leve\n5. Finalize com uma dica prática baseada no clima (ex: \"leve guarda-chuva\", \"passe protetor solar\", \"se agasalhe bem\")\n\nREGRAS DE FORMATAÇÃO (OBRIGATÓRIO):\n- Use APENAS *negrito* para destaques (sempre feche com * pareado)\n- NÃO use _itálico_, `código`, [ ] links, ou ** duplo\n- NÃO use * dentro de palavras ou números (ex: escreva 25°C, não *25°C*)\n- Cada * de abertura DEVE ter um * de fechamento na mesma linha\n- Na dúvida, não formate — texto limpo é melhor que erro\n\nSeja conciso, simpático e informativo. Responda APENAS com a mensagem final."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -190,8 +190,19 @@
     },
     {
       "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const text = $json.output || $json.fallback_message || '';\nlet s = text;\n\n// Fix unmatched * (bold)\nconst asterisks = (s.match(/\\*/g) || []).length;\nif (asterisks % 2 !== 0) {\n  const lastIdx = s.lastIndexOf('*');\n  s = s.substring(0, lastIdx) + s.substring(lastIdx + 1);\n}\n\n// Fix unmatched _ (italic)\nconst underscores = (s.match(/_/g) || []).length;\nif (underscores % 2 !== 0) {\n  const lastIdx = s.lastIndexOf('_');\n  s = s.substring(0, lastIdx) + s.substring(lastIdx + 1);\n}\n\n// Fix unmatched ` (code)\nconst backticks = (s.match(/`/g) || []).length;\nif (backticks % 2 !== 0) {\n  const lastIdx = s.lastIndexOf('`');\n  s = s.substring(0, lastIdx) + s.substring(lastIdx + 1);\n}\n\n// Remove unmatched [ without closing ]\ns = s.replace(/\\[([^\\]]*$)/g, '$1');\n\nreturn { text: s };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2000, -80],
+      "id": "e2f3a4b5-c6d7-4e8f-9a0b-1c2d3e4f5a6b",
+      "name": "Sanitizar Texto"
+    },
+    {
+      "parameters": {
         "chatId": "={{ $node[\"Telegram Trigger\"].json.message.chat.id }}",
-        "text": "={{ $json.output || $json.fallback_message }}",
+        "text": "={{ $json.text }}",
         "additionalFields": {
           "parse_mode": "Markdown",
           "appendAttribution": false
@@ -199,7 +210,7 @@
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [2100, -180],
+      "position": [2240, -80],
       "id": "c0d1e2f3-a4b5-4c6d-7e8f-9a0b1c2d3e4f",
       "name": "Enviar Resposta",
       "credentials": {
@@ -319,7 +330,7 @@
       "main": [
         [
           {
-            "node": "Enviar Resposta",
+            "node": "Sanitizar Texto",
             "type": "main",
             "index": 0
           }
@@ -334,6 +345,17 @@
       ]
     },
     "Resposta Fallback": {
+      "main": [
+        [
+          {
+            "node": "Sanitizar Texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanitizar Texto": {
       "main": [
         [
           {
